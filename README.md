@@ -1,4 +1,4 @@
 cloudbroker
 ===========
 
-Bag-of-tasks in the cloud
+Bag-of-task applications in the cloud
