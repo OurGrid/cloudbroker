@@ -1,0 +1,12 @@
+{name: "hello", tasks: [
+  {
+    init:[{local: "hello.txt", remote: "hello.txt"}], 
+    remote: "echo hello.txt > output", 
+    final: [{local: "output", remote: "output"}]
+  },
+  {
+    init:[{local: "hello.txt", remote: "hello.txt"}], 
+    remote: "echo hello.txt > output2", 
+    final: [{local: "output2", remote: "output2"}]
+  }
+]}
