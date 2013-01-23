@@ -13,4 +13,6 @@ public class Configuration {
 	public static final String INSTANCE_IMAGEID = "instance.imageid";
 	public static final String INSTANCE_SECGROUP = "instance.securitygroup";
 	public static final String INSTANCE_KEYNAME = "instance.keyname";
+	
+	public static final String REST_PORT = "rest.port";
 }

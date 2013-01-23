@@ -5,6 +5,7 @@ import java.util.List;
 
 public class Task extends Executable {
 
+	private Integer id;
 	private Job job;
 	private List<IOOperation> initOperations = new LinkedList<IOOperation>();
 	private String remote;
@@ -40,6 +41,14 @@ public class Task extends Executable {
 	
 	public String getRemote() {
 		return remote;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+	
+	public Integer getId() {
+		return id;
 	}
 	
 }

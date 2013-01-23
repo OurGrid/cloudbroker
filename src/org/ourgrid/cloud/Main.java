@@ -3,12 +3,10 @@ package org.ourgrid.cloud;
 import java.io.FileInputStream;
 import java.util.Properties;
 
-import org.apache.commons.io.IOUtils;
-import org.ourgrid.cloud.broker.JobParser;
-import org.ourgrid.cloud.broker.Scheduler;
-import org.ourgrid.cloud.broker.model.job.Job;
-
-import com.google.gson.JsonParser;
+import org.ourgrid.cloud.broker.Configuration;
+import org.ourgrid.cloud.rest.BrokerApplication;
+import org.restlet.Component;
+import org.restlet.data.Protocol;
 
 public class Main {
 
@@ -16,12 +14,14 @@ public class Main {
 		Properties properties = new Properties();
 		properties.load(new FileInputStream("broker.properties"));
 		
-		Job job = JobParser.parse(new JsonParser().parse(
-				IOUtils.toString(new FileInputStream("hello.json"))));
+		String port = properties.getProperty(Configuration.REST_PORT);
 		
-		new Scheduler(properties).addJob(job);
-		
-		Thread.currentThread().suspend();
+		Component component = new Component(); 
+	    component.getServers().add(Protocol.HTTP, Integer.valueOf(port));  
+	    component.getClients().add(Protocol.FILE);
+	    component.getDefaultHost().attach(new BrokerApplication(properties));
+	    
+	    component.start();
 	}
 	
 }

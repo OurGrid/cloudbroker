@@ -1,9 +1,12 @@
 package org.ourgrid.cloud.broker;
 
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 
 import org.ourgrid.cloud.broker.model.instance.Instance;
 import org.ourgrid.cloud.broker.model.instance.InstanceState;
@@ -16,7 +19,7 @@ import org.ourgrid.cloud.executor.SSHExecutor;
 
 public class Scheduler {
 
-	private List<Job> jobs = new LinkedList<Job>();
+	private Map<String, Job> jobs = new LinkedHashMap<String, Job>();
 	private List<Instance> instances = new LinkedList<Instance>();
 	private EC2Helper ec2;
 	private Properties properties;
@@ -32,13 +35,18 @@ public class Scheduler {
 				properties.getProperty(Configuration.EC2_SECRETKEY));
 	}
 
-	public void addJob(Job job) {
-		jobs.add(job);
+	public String addJob(Job job) {
+		Long jobId = Math.abs(new Random().nextLong());
+		String jobIdStr = jobId.toString();
+		job.setId(jobIdStr);
+		jobs.put(jobIdStr, job);
 		schedule();
+		
+		return jobIdStr;
 	}
 	
 	private void schedule() {
-		for (Job job : jobs) {
+		for (Job job : jobs.values()) {
 			schedule(job);
 		}
 		disposeIdleWorkers();
@@ -76,6 +84,7 @@ public class Scheduler {
 		if (instance != null) {
 			instance.setState(InstanceState.BUSY);
 			task.setState(ExecutableState.RUNNING);
+			task.getJob().setState(ExecutableState.RUNNING);
 			new SSHExecutor(this, instance, task).execute();
 		}
 	}
@@ -144,5 +153,9 @@ public class Scheduler {
 	
 	public EC2Helper getEc2() {
 		return ec2;
+	}
+
+	public Job getJob(String jobId) {
+		return jobs.get(jobId);
 	}
 }
