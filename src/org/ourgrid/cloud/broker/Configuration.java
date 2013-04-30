@@ -8,6 +8,7 @@ public class Configuration {
 	
 	public static final String EC2_ACCESSKEY = "ec2.accesskey";
 	public static final String EC2_SECRETKEY = "ec2.secretkey";
+	public static final String EC2_ENDPOINT = "ec2.endpoint";
 	
 	public static final String INSTANCE_TYPE = "instance.type";
 	public static final String INSTANCE_IMAGEID = "instance.imageid";

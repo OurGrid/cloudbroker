@@ -32,7 +32,8 @@ public class Scheduler {
 	private void initEC2() {
 		this.ec2 = new EC2Helper(
 				properties.getProperty(Configuration.EC2_ACCESSKEY), 
-				properties.getProperty(Configuration.EC2_SECRETKEY));
+				properties.getProperty(Configuration.EC2_SECRETKEY),
+				properties.getProperty(Configuration.EC2_ENDPOINT));
 	}
 
 	public String addJob(Job job) {

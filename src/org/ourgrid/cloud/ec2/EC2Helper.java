@@ -19,25 +19,36 @@ public class EC2Helper {
 
 	private AmazonEC2Client ec2;
 
-	public EC2Helper(String accessKey, String secretKey) {
+	public EC2Helper(String accessKey, String secretKey, String endpoint) {
 		AWSCredentials credentials = new BasicAWSCredentials(
 				accessKey, secretKey);
 		this.ec2 = new AmazonEC2Client(credentials);
+		if (endpoint != null) {
+			this.ec2.setEndpoint(endpoint);
+		}
 	}
 	
 	public Instance createInstance(InstanceContext context) {
-		RunInstancesRequest runInstancesRequest = new RunInstancesRequest()
-				.withInstanceType(context.getInstanceType())
-				.withImageId(context.getImageId())
+		RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
+		
+		runInstancesRequest.withImageId(context.getImageId())
 				.withMinCount(1).withMaxCount(1)
-				.withSecurityGroupIds(context.getSecurityGroup())
 				.withKeyName(context.getKeyName());
 
+		if (context.getInstanceType() != null) {
+			runInstancesRequest.withInstanceType(context.getInstanceType());
+		}
+		
+		if (context.getSecurityGroup() != null) {
+			runInstancesRequest.withSecurityGroupIds(context.getSecurityGroup());
+		}
+		
 		RunInstancesResult result = ec2.runInstances(runInstancesRequest);
 		Reservation reservation = result.getReservation();
 		if (reservation.getInstances().isEmpty()) {
 			return null;
 		}
+		
 		Instance instance = reservation.getInstances().iterator().next();
 		return instance;
 	}
