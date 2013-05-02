@@ -130,11 +130,20 @@ public class SSHExecutor {
 		ssh.addHostKeyVerifier(createBlankHostKeyVerifier());
 		ssh.connect(instance.getAddress());
 		
-		PKCS8KeyFile keyFile = new PKCS8KeyFile();
-		String keyFilePath = scheduler.getProperties().getProperty(Configuration.SSH_KEY);
-		keyFile.init(new File(keyFilePath));
+		String authType = scheduler.getProperties().getProperty(Configuration.SSH_AUTH);
 		String sshUser = scheduler.getProperties().getProperty(Configuration.SSH_USER);
-		ssh.authPublickey(sshUser, keyFile);
+		
+		if (Configuration.SSH_AUTH_PK.equals(authType)) {
+			PKCS8KeyFile keyFile = new PKCS8KeyFile();
+			String keyFilePath = scheduler.getProperties().getProperty(Configuration.SSH_KEY);
+			keyFile.init(new File(keyFilePath));
+			ssh.authPublickey(sshUser, keyFile);
+		} else if (Configuration.SSH_AUTH_PASSWORD.equals(authType)) {
+			String password = scheduler.getProperties().getProperty(Configuration.SSH_PASSWORD);
+			ssh.authPassword(sshUser, password);
+		} else {
+			throw new Exception("SSH auth type not supported.");
+		}
 		
 		return ssh;
 	}
