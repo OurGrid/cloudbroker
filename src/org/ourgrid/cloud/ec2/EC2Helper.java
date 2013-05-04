@@ -1,5 +1,7 @@
 package org.ourgrid.cloud.ec2;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -11,7 +13,6 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
-import com.amazonaws.services.ec2.model.RunInstancesResult;
 import com.amazonaws.services.ec2.model.StartInstancesRequest;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 
@@ -32,8 +33,7 @@ public class EC2Helper {
 		RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
 		
 		runInstancesRequest.withImageId(context.getImageId())
-				.withMinCount(1).withMaxCount(1)
-				.withKeyName(context.getKeyName());
+				.withMinCount(1).withMaxCount(1);
 
 		if (context.getInstanceType() != null) {
 			runInstancesRequest.withInstanceType(context.getInstanceType());
@@ -43,14 +43,52 @@ public class EC2Helper {
 			runInstancesRequest.withSecurityGroupIds(context.getSecurityGroup());
 		}
 		
-		RunInstancesResult result = ec2.runInstances(runInstancesRequest);
-		Reservation reservation = result.getReservation();
-		if (reservation.getInstances().isEmpty()) {
+		if (context.getKeyName() != null) {
+			runInstancesRequest.withKeyName(context.getKeyName());
+		}
+		
+//		RunInstancesResult result = null;
+		
+		try {
+//			result = ec2.runInstances(runInstancesRequest);
+			ec2.runInstances(runInstancesRequest);
+		} catch (Exception e) {
+			// Not enough resources
 			return null;
 		}
 		
-		Instance instance = reservation.getInstances().iterator().next();
-		return instance;
+//		Reservation reservation = result.getReservation();
+//		if (reservation.getInstances().isEmpty()) {
+//			return null;
+//		}
+//		Instance instance = reservation.getInstances().iterator().next();
+//		return instance;
+		
+		//FIXME EUCA crazy hack
+		DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest();
+		DescribeInstancesResult describeInstancesResult = ec2.describeInstances(describeInstancesRequest);
+		
+		List<Instance> instances = new LinkedList<Instance>();
+		
+		List<Reservation> reservations = describeInstancesResult.getReservations();
+		for (Reservation reservation : reservations) {
+			for (Instance instance : reservation.getInstances()) {
+				instances.add(instance);
+			}
+		}
+		
+		Collections.sort(instances, new Comparator<Instance>() {
+			@Override
+			public int compare(Instance o1, Instance o2) {
+				return o2.getLaunchTime().compareTo(o1.getLaunchTime());
+			}
+		});
+		
+		for (Instance instance : instances) {
+			return instance;
+		}
+		
+		return null;
 	}
 	
 	public Instance getInstanceStatus(String instanceId) {

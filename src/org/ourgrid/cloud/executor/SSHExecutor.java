@@ -66,8 +66,10 @@ public class SSHExecutor {
 		while (true) {
 			com.amazonaws.services.ec2.model.Instance ec2Instance = scheduler.getEc2()
 					.getInstanceStatus(instance.getId());
-			if (ec2Instance.getState().getName().equals("running") && 
-					ec2Instance.getPublicIpAddress() != null) {
+			//FIXME EUCA hack
+			if (!ec2Instance.getPublicIpAddress().equals(ec2Instance.getPrivateIpAddress())) {
+//			if (ec2Instance.getState().getName().equals("running") && 
+//					ec2Instance.getPublicIpAddress() != null) {
 				instance.setAddress(ec2Instance.getPublicIpAddress());
 				break;
 			}
@@ -107,7 +109,7 @@ public class SSHExecutor {
 			for (IOOperation finalOperation : task.getFinalOperations()) {
 				SCPFileTransfer ft = sshClient.newSCPFileTransfer();
 				ft.download(sandbox + "/" + finalOperation.getRemote(), 
-						new FileSystemFile(new File(finalOperation.getRemote())));
+						new FileSystemFile(new File(finalOperation.getLocal())));
 			}
 			
 		} catch (Exception e) {
