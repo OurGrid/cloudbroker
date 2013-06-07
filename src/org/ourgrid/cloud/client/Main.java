@@ -24,6 +24,8 @@ public class Main {
 		CommonParameters commonParams = new CommonParameters();
 		CommandSubmit submitCommand = new CommandSubmit();
 		CommandStatus statusCommand = new CommandStatus();
+		CommandCancel cancelCommand = new CommandCancel();
+		CommandClean cleanCommand = new CommandClean();
 		
 		JCommander commander = new JCommander(commonParams);
 		commander.addCommand(CommandSubmit.NAME, submitCommand);
@@ -36,6 +38,10 @@ public class Main {
 				submit(submitCommand.jobFile, commonParams.endpoint);
 			} else if (parsedCommand.equals(CommandStatus.NAME)) {
 				status(statusCommand.jobId, commonParams.endpoint);
+			} else if (parsedCommand.equals(CommandCancel.NAME)) {
+				cancel(cancelCommand.jobId, commonParams.endpoint);
+			} else if (parsedCommand.equals(CommandClean.NAME)) {
+				clean(cleanCommand.jobId, commonParams.endpoint);
 			} else {
 				commander.usage();
 			}
@@ -49,7 +55,19 @@ public class Main {
 		InputRepresentation result = (InputRepresentation) clientResource.get();
 		System.out.println(IOUtils.toString(result.getStream()));
 	}
+	
+	private static void cancel(String jobId, String endpoint) throws IOException {
+		ClientResource clientResource = new ClientResource(endpoint + "/job/" + jobId + "/cancel");
+		InputRepresentation result = (InputRepresentation) clientResource.post(null);
+		System.out.println(IOUtils.toString(result.getStream()));
+	}
 
+	private static void clean(String jobId, String endpoint) throws IOException {
+		ClientResource clientResource = new ClientResource(endpoint + "/job/" + jobId + "/clean");
+		InputRepresentation result = (InputRepresentation) clientResource.post(null);
+		System.out.println(IOUtils.toString(result.getStream()));
+	}
+	
 	private static void submit(String jobFile, String endpoint) throws FileNotFoundException, JSONException, IOException {
 		ClientResource clientResource = new ClientResource(endpoint + "/job");
 		Representation request = new JsonRepresentation(new JSONObject(
@@ -78,5 +96,21 @@ public class Main {
 		
 		@Parameter(names = "-file", description = "Path to the JSON file representing the job.", required = true)
 		private String jobFile;
+	}
+	
+	@Parameters(commandDescription = "Cancels a job in this scheduler.")
+	private static class CommandCancel {
+		static String NAME = "cancel";
+		
+		@Parameter(names = "-id", description = "The id of the job.", required = true)
+		private String jobId;
+	}
+	
+	@Parameters(commandDescription = "Cleans a job in this scheduler.")
+	private static class CommandClean {
+		static String NAME = "cancel";
+		
+		@Parameter(names = "-id", description = "The id of the job.", required = true)
+		private String jobId;
 	}
 }

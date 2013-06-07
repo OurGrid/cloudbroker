@@ -14,7 +14,7 @@ import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 
-public class JobResourceImpl extends ServerResource {
+public class CleanJobResourceImpl extends ServerResource {
 	
 	@Post("json")
 	public Representation createJob(JsonRepresentation representation) throws Exception {

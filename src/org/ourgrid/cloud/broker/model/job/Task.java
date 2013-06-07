@@ -3,6 +3,8 @@ package org.ourgrid.cloud.broker.model.job;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.ourgrid.cloud.broker.model.instance.Instance;
+
 public class Task extends Executable {
 
 	private Integer id;
@@ -10,6 +12,7 @@ public class Task extends Executable {
 	private List<IOOperation> initOperations = new LinkedList<IOOperation>();
 	private String remote;
 	private List<IOOperation> finalOperations = new LinkedList<IOOperation>();
+	private Instance instance;
 	
 	public Job getJob() {
 		return job;
@@ -49,6 +52,14 @@ public class Task extends Executable {
 	
 	public Integer getId() {
 		return id;
+	}
+
+	public void setAllocatedInstance(Instance instance) {
+		this.instance = instance;
+	}
+	
+	public Instance getAllocatedInstance() {
+		return instance;
 	}
 	
 }

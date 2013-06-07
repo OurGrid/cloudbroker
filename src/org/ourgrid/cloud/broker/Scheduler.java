@@ -1,5 +1,6 @@
 package org.ourgrid.cloud.broker;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -65,7 +66,7 @@ public class Scheduler {
 	}
 
 	private void schedule(Job job) {
-		if (job.getState().equals(ExecutableState.FINISHED)) {
+		if (job.getState().isComplete()) {
 			return;
 		}
 		for (Task task : job.getTasks()) {
@@ -85,13 +86,19 @@ public class Scheduler {
 		if (instance != null) {
 			instance.setState(InstanceState.BUSY);
 			task.setState(ExecutableState.RUNNING);
+			task.setAllocatedInstance(instance);
 			task.getJob().setState(ExecutableState.RUNNING);
 			new SSHExecutor(this, instance, task).execute();
 		}
 	}
 	
 	public void finished(Task task, Instance instance) {
+		if (task.getState().equals(ExecutableState.CANCELLED)) {
+			return;
+		}
+		
 		task.setState(ExecutableState.FINISHED);
+		task.setAllocatedInstance(null);
 		instance.setState(InstanceState.IDLE);
 		
 		boolean siblingFinished = true;
@@ -110,8 +117,25 @@ public class Scheduler {
 	}
 	
 	public void failed(Task task, Instance instance) {
+		if (task.getState().equals(ExecutableState.CANCELLED)) {
+			return;
+		}
+		
 		task.setState(ExecutableState.FAILED);
+		task.setAllocatedInstance(null);
 		instance.setState(InstanceState.IDLE);
+		schedule();
+	}
+	
+	public void cancel(Job job) {
+		job.setState(ExecutableState.CANCELLED);
+		for (Task task : job.getTasks()) {
+			task.setState(ExecutableState.CANCELLED);
+			task.setAllocatedInstance(null);
+			for (Instance instance : instances) {
+				instance.setState(InstanceState.IDLE);
+			}
+		}
 		schedule();
 	}
 	
@@ -156,7 +180,18 @@ public class Scheduler {
 		return ec2;
 	}
 
+	public Collection<Job> getJobs() {
+		return jobs.values();
+	}
+	
 	public Job getJob(String jobId) {
 		return jobs.get(jobId);
+	}
+
+	public void clean(Job job) {
+		if (!job.getState().isComplete()) {
+			throw new IllegalStateException("A job cannot be cleaned when not completed.");
+		}
+		jobs.remove(job.getId());
 	}
 }
